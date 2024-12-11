@@ -1,12 +1,10 @@
 #!/usr/bin/env python
-import atexit
-import os
 import sys
 import termios
-import re
 import tty
-import shutil
-from Clict import Clict
+
+import evHID.Types.data
+
 
 # # Open the new pseudoterminal for reading
 # new_stdin_fd = os.open(new_pts, os.O_RDONLY)
@@ -101,135 +99,6 @@ def ansi(term,ansi, parser):
 # 			result=ansi(ansiesc,Parser)
 # 		return result
 
-class Cursor(Clict):
-	def __init__(__s,term):
-		super().__init__()
-		__s.term=term
-		__s.ansi='\x1b[6n'
-		__s.re=re.compile(r"^.?\x1b\[(?P<Y>\d*);(?P<X>\d*)R",re.VERBOSE)
-		__s.loc=__s.__update__
-		__s.x=lambda :__s.__update__('X')
-		__s.y=lambda : __s.__update__('Y')
-		__s.xy=lambda : __s.__update__()
-		__s.history=[*(None,)*64]
-		__s.init=__s.__update__()
-
-	def __update__(__s,get='XY'):
-		def Parser():
-			buf=' '
-			while buf[-1] != "R":
-				buf += sys.stdin.read(1)
-			# reading the actual values, but what if a keystroke appears while reading
-			# from stdin? As dirty work around, getpos() returns if this fails: None
-			try:
-				groups=__s.re.search(buf).groupdict()
-				result={'X': groups['X'],'Y':groups['Y']}
-			except AttributeError:
-				result=None
-			return result
-		result=None
-		while not result:
-			result=ansi(__s.term,__s.ansi,Parser)
-		__s.X=result['X']
-		__s.Y=result['Y']
-		__s.XY=tuple(result.values())
-		__s.history=[__s.history[1:],__s.XY]
-		return __s.get(get)
-	def show(__s,state=True):
-		if state:
-			print('\x1b[?25h',end='',flush=True)
-		else:
-			__s.hide()
-	def hide(__s,state=True):
-		if state:
-			print('\x1b[?25l',end='',flush=True)
-			atexit.register(__s.show)
-		else:
-			__s.show()
-
-class Color(Clict):
-	def __init__(__s,term,spec=None):
-		specs={'fg': 10 , 'bg': 11}
-		super().__init__()
-		__s.term=term
-		__s.ansi=f'\x1b]{specs.get(spec,10)};?\a'
-		__s.r=lambda :__s.__update__('R')
-		__s.g=lambda : __s.__update__('G')
-		__s.b=lambda : __s.__update__('B')
-		__s.rgb=lambda : __s.__update__()
-
-		__s.init=__s.__update__()
-
-	def __update__(__s,get='RGB'):
-		def Parser():
-			buf = ''
-			try:
-				for i in range(23):
-					buf += sys.stdin.read(1)
-				rgb=buf.split(':')[1].split('/')
-				rgb={c:int(i,base=16) for c,i in zip([*'RGB'],rgb)}
-				rgb['N']=65536
-			except Exception as E:
-				print(E)
-				rgb=None
-			return rgb
-		result=None
-		while not result:
-			result = ansi(__s.term, __s.ansi, Parser)
-		__s.R=result['R']
-		__s.G=result['G']
-		__s.B=result['B']
-		__s.RGB=tuple(result.values())
-		return result
-
-
-class Term(Clict):
-	def __init__(__s,*a,**k):
-		super().__init__()
-		__s.pid=os.getpid()
-		__s.ppid=os.getpid()
-		__s.fd  = sys.stdin.fileno()
-		__s.tty = os.ttyname(__s.fd)
-		__s.live = termios.tcgetattr(__s.fd)
-		__s.save = termios.tcgetattr(__s.fd)
-		__s.normal =lambda: termios.tcsetattr(__s.fd, termios.TCSAFLUSH, __s.save)
-		atexit.register(__s.normal)
-		__s.cursor = Cursor(__s)
-		__s.color.fg = Color(__s,'fg')
-		__s.color.bg = Color(__s,'bg')
-
-	def echo(__s,enable):
-		__s.live[3] &= ~termios.ICANON
-		if enable:
-			__s.live[3] |= termios.ICANON
-		__s.update()
-
-	def canonical(__s,enable):
-		__s.live[3] &= ~termios.ECHO
-		if enable:
-			__s.live[3] |= termios.ECHO
-		__s.update()
-	def mode(__s,mode):
-		def normal():
-			__s.cursor.show(True)
-			__s.echo(True)
-			__s.canonical(True)
-			__s.normal()
-		def Ctl():
-			__s.cursor.show(False)
-			__s.echo(False)
-			__s.canonical(False)
-
-		if mode=='ctl':
-			Ctl()
-		elif mode=='normal':
-			normal()
-
-	def update(__s):
-		termios.tcsetattr(__s.fd, termios.TCSAFLUSH, __s.live)
-
-
-
 
 if __name__ == '__main__' :
 
@@ -238,4 +107,4 @@ if __name__ == '__main__' :
 		print(T.cursor.Y)
 		print(T.cursor.X)
 		print(T.cursor.y())
-		print(T.color.bg.rgb())
+		print(evHID.Types.data.color.bg.rgb())
