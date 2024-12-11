@@ -20,7 +20,7 @@ class KBDev():
 		__s.term=k.get('term')
 		__s.parent=k.get('parent')
 		__s.callback = {
-			'kd' : k.get('kd',lambda*a,**k:None),ida-free-9.0.240925.run
+			'kd' : k.get('kd',lambda*a,**k:None),
 			'ku' : k.get('ku',lambda*a,**k:None),}
 	
 	
