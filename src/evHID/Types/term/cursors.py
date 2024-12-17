@@ -6,8 +6,6 @@ from time import time_ns
 
 from Clict import Clict
 
-from evHID.Term import ansi
-
 
 
 class Cursor(Clict):
@@ -48,7 +46,7 @@ class Cursor(Clict):
 		timeout.start=time_ns()//1e6
 		timeout.running=0
 		while not result:
-			result=ansi(__s.term,''.join([__s.ansi.esc,__s.ansi.q]),Parser)
+			result=__s.term.ansi(''.join([__s.ansi.esc,__s.ansi.q]),Parser)
 		__s.X=result['X']
 		__s.Y=result['Y']
 		__s.XY=tuple(result.values())

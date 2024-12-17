@@ -7,8 +7,8 @@ from pynput import keyboard
 
 from evHID.Types.data import fullkey
 from evHID.Types.dev.keyboard import KBDev
-from evHID.Types.term.terminal import Term
-from evHID.Types.tty.keyboard import KBTty
+from evHID.Types.term.posix import Term
+from evHID.Types.tty import KBTty
 
 
 class KBEV_Posix(Clict):
@@ -33,6 +33,8 @@ class KBEV_Posix(Clict):
 		K=keyboard.Key
 		if key in [K.space, K.enter, K.home, K.end, K.page_down, K.page_up,K.tab]:
 			stdin = __s.tty.read(1)
+		elif key in [K.shift,K.shift_l,K.shift_r,K.caps_lock,K.ctrl,K.alt,K.alt_gr,K.num_lock,K.scroll_lock,K.pause,K.print_screen]:
+			stdin=__s.tty.read(0)
 		elif 'value' in dir(key):
 			stdin = __s.tty.read(3)
 		elif 'char' in dir(key):
@@ -41,7 +43,7 @@ class KBEV_Posix(Clict):
 	def __sigrecv__(__s):
 
 		def receive_dev(signum, stack):
-			if __s.tty.event():
+			if __s.tty.event:
 				key=__s.dev.key()
 				__s.clearstdin(key)
 				__s._key=key

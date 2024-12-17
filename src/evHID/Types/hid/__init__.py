@@ -1,9 +1,3 @@
 #!/usr/bin/env python
 
-
-def main():
-	pass
-
-
-if __name__ == '__main__':
-	main()
+from evHID.Types.hid.kbev import KBEV_Posix

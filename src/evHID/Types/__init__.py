@@ -1,9 +1,5 @@
 #!/usr/bin/env python
 
-
-def main():
-	pass
-
-
-if __name__ == '__main__':
-	main()
+from evHID.Types.term import Term
+from evHID.Types.tty import KBTty
+from evHID.Types.hid import KBEV_Posix as KBEV

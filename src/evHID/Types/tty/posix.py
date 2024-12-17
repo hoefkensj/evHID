@@ -9,18 +9,17 @@ class KBTty(Clict):
 	def __init__(__s,parent=None,term=None):
 		super().__init__()
 		__s.term=parent.term or term
-		__s.event=__s.__event__()
-		__s.event=__s.__event__
 
-		
-	def __event__(__s):
-		__s._event=any(select([__s.term.fd], [], [], 0))
-		return __s._event
+	@property
+	def event(__s):
+		return any(select([__s.term.fd], [], [], 0))
+
 	
 	def read(__s,n=1):
 		buffer=[]
 		for i in range(n):
 			buffer+=[sys.stdin.read(1)]
+		sys.stdin.flush()
 		return buffer
 
 	def getch(__s):
@@ -29,3 +28,9 @@ class KBTty(Clict):
 			__s.flush()
 	def flush(__s):
 		__s.buffer=[]
+		sys.stdin.flush()
+
+
+
+
+

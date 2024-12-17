@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from evHID.Types.hid.kbev import KBEV_Posix
+from evHID import KBEV
 from pynput import keyboard
 ### how this shit should work ideallly
 # keypress-> triggers event trought device listener
@@ -10,29 +10,21 @@ from pynput import keyboard
 # -> getkey pops last key from buffer
 # -> getkeys gets all from buffer and wipes buffer
 
-
+def kd(*a,**k):
+	print(*a,**k)
+	
 from time import sleep
-
 if __name__ == '__main__':
 	pynspace=keyboard.Key.space
+	
 
-	with KBEV_Posix() as kb:
+	with KBEV(kd=kd) as kb:
 		while True:
 			if kb.event():
 				key=kb.key()
-			sleep(0.05)
+				if key ==pynspace:
+					print(' spaceman ')
+				else:
+					print(key)
+			sleep(0.0005)
 
-		#
-		# def handle_signal(signum, frame):
-		# 	print(f"Custom signal {signum} received, handling the signal.")
-		# 	exit(0)
-		#
-		#
-		# # Set the signal handler for SIGUSR1
-		# signal.signal(signal.SIGUSR1, handle_signal)
-
-			# print('..',end='',flush=True)
-			# sleep(0.5)
-			# print('..',end='',flush=True)
-			# sleep(0.5)
-			# print('..',end='',flush=True)

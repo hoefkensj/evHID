@@ -16,7 +16,7 @@ class fullkey():
 			attr = getattr(__s._key, attr_name,None)
 			if attr_name=="char":
 				if attr is None:
-					attr=getattr(__s._key, "name")
+					attr=getattr(__s._key, "name",str(__s._key))
 				attr_name=f'_{attr_name}'
 			elif attr_name == "value":
 				if attr is None:
