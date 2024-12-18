@@ -21,8 +21,6 @@ class Cursor(Clict):
 		
 		__s.re=re.compile(r"^.?\x1b\[(?P<Y>\d*);(?P<X>\d*)R",re.VERBOSE)
 		__s.position=__s.__update__
-		__s.x=lambda :__s.__update__('X')
-		__s.y=lambda : __s.__update__('Y')
 		__s.xy=lambda : __s.__update__()
 		__s.history=[*(None,)*64]
 		__s.init=__s.__update__()
@@ -36,7 +34,7 @@ class Cursor(Clict):
 			# from stdin? As dirty work around, getpos() returns if this fails: None
 			try:
 				groups=__s.re.search(buf).groupdict()
-				result={'X': groups['X'],'Y':groups['Y']}
+				result={'X': int(groups['X']),'Y':int(groups['Y'])}
 			except AttributeError:
 				result=None
 			return result
@@ -64,7 +62,16 @@ class Cursor(Clict):
 		else:
 			__s.show()
 
-
+	@property
+	def x(__s):
+		__s.__update__('X')
+		return __s.X
+	@property
+	def y(__s):
+		__s.__update__('Y')
+		return __s.Y
+		
+		
 class vCursor(Cursor):
 	def __init__(__s,term,x=1,y=1):
 		super().__init__()
