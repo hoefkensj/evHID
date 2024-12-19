@@ -45,17 +45,9 @@ class fullkey():
 	def __eq__(__s, other):
 		
 		result=False
-		if __s._key == other:
-			result=True
-		elif __s.name == other:
-			result=True
-		elif __s.char == other:
-			result=True
-		elif __s.value == other:
+		if other in [__s.key ,__s.name,__s.char,__s.value,__s._value,__s._key,__s._char]:
 			result=True
 		elif __s._char == str(other):
-			result=True
-		elif __s._value == other:
 			result=True
 		else:
 			if (vother:=getattr(other,'value',None )) is not None:
