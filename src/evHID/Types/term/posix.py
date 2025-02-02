@@ -43,15 +43,15 @@ class Term():
 
 	
 	def echo(__s,enable):
-		__s.live[3] &= ~__s.ICANON
-		if enable:
-			__s.live[3] |= __s.ICANON
-		__s.update()
 
-	def canonical(__s,enable):
 		__s.live[3] &= ~__s.ECHO
 		if enable:
 			__s.live[3] |= __s.ECHO
+		__s.update()
+	def canonical(__s,enable):
+		__s.live[3] &= ~__s.ICANON
+		if enable:
+			__s.live[3] |= __s.ICANON
 		__s.update()
 	def __mode__(__s,mode=None):
 		def Normal():
@@ -73,20 +73,20 @@ class Term():
 			2   :  Ctl,
 		}
 		if mode is not None and mode != __s._mode:
-				nmode=nmodi.get(mode)
-				fmodi.get(nmode)()
+			nmode=nmodi.get(mode)
+			fmodi.get(nmode)()
 		return __s._mode
 		
 	def update(__s):
 		__s.tcsetattr(__s.fd, __s.TCSAFLUSH, __s.live)
 
 	def ansi(__s, ansi, parser):
-			__s.setcbreak(__s.fd, __s.TCSANOW)
-			try:
-				sys.stdout.write(ansi)
-				sys.stdout.flush()
-				result = parser()
-			finally:
-				__s.tcsetattr(__s.fd, termios.TCSAFLUSH, __s.live)
-			return result
+		__s.setcbreak(__s.fd, __s.TCSANOW)
+		try:
+			sys.stdout.write(ansi)
+			sys.stdout.flush()
+			result = parser()
+		finally:
+			__s.tcsetattr(__s.fd, termios.TCSAFLUSH, __s.live)
+		return result
 #

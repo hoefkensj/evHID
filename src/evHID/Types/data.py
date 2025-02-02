@@ -1,18 +1,81 @@
 #!/usr/bin/env python
 from dataclasses import dataclass, field
-
 from pynput import keyboard
+from contextlib import suppress
+class Callback():
+	def __init__(s,*a,**k):
+		s.scope=None
+		s.event=None
+		s.vars={}
+		s.func=None
+		s.scope=None
+		s.vars=None
+		s.key=None
+		s.__kwargs__(**k)
+	def __kwargs__(s,**k):
+		s.scope=k.get('scope','global')
+		s.event=k.get('event')
+		s.vars=k.get('vars',{})
+		for var in s.vars:
+			setattr(s,var,s.vars[var])
+		fn=k.get('fn')
+		s.func=fn(s)
+	def __call__(s, key):
+		s.key=key
+		s.fn()
 
+	def fn(s):
+		s.func(s.key)
+
+@dataclass(frozen=True)
+class Key():
+	__qualname__= keyboard.Key.__name__
+	key:keyboard.Key
+	name:str
+	char:str
+	value:int
+	
+	def __str__(__s):
+		return str(__s.key).strip("'")
+	
+	def __repr__(__s):
+		return f'key({__s.name},{__s.value},\'{__s.char}\')'
+	
+	def __int__(__s):
+		return __s.value
+	
+	def __eq__(__s, other):
+		r = (other in [__s.key, __s.name, __s.char, __s.value, str(__s.value), str(__s.key), str(__s.char)])
+		if r is False:
+			for s in [str, chr, repr]:
+				with suppress(Exception):
+					r = (__s._char == s(other))
+				if r is True:
+					break
+		
+		if r is False:
+			with suppress(Exception):
+				r = __s._value == other.value
+		if r is False:
+			with suppress(Exception):
+				r = __s._value == str(other.value)
+		return r
+	
+def FullKey(key):
+	K=FKey(key)
+	newkey= Key(K.key, K.name, K.char, K.value)
+	return newkey
 
 @dataclass()
-class fullkey():
+class FKey():
 	__qualname__ = keyboard.Key.__name__
 	_key:keyboard.Key
-	name:str=field(default='')
+	_name:str=field(default='')
 	_char:str=field(default='')
 	_value:int=field(default=0)
+	# _term:int=field(default=0)
 	def __post_init__(__s):
-		for attr_name in ("name","char", "value" ):
+		for attr_name in ("char", "value" ,"name"):
 			attr = getattr(__s._key, attr_name,None)
 			if attr_name=="char":
 				if attr is None:
@@ -22,40 +85,57 @@ class fullkey():
 				if attr is None:
 					attr=ord(getattr(__s._key, "char"))
 				attr_name=f'_{attr_name}'
+			elif attr_name=="name":
+				if attr is None or attr=='':
+					attr = __s.char
+				attr_name=f'_{attr_name}'
+
 			setattr(__s, attr_name, attr)
-		if __s.name=='space':
+		if __s._name=='space':
 			setattr(__s,'_char',' ')
 			setattr(__s,'_value', 0x20)
-			
-			
+
+
+
+
 	@property
-	def value(__s):
-		return f'<{__s._value}>'
+	def key(__s):     	return __s._key
+	@key.setter
+	def key(__s, key):  __s._key = key
+	
 	@property
-	def char(__s):
-		return __s._char
+	def value(__s):    return __s._value
+	@value.setter
+	def value(__s,value):		__s._value = value
 	
-	def __str__(__s):
-		return str(__s._key)
-	def __repr__(__s):
-		return f'key({__s.name},{__s.value},\'{__s.char}\')'
-	def __int__(__s):
-		return __s._value
+	@property
+	def char(__s):     return __s._char
+	@char.setter
+	def char(__s,char):	__s._char = char
 	
-	def __eq__(__s, other):
-		
-		result=False
-		if other in [__s.key ,__s.name,__s.char,__s.value,__s._value,__s._key,__s._char]:
-			result=True
-		elif __s._char == str(other):
-			result=True
-		else:
-			if (vother:=getattr(other,'value',None )) is not None:
-				if __s.value == vother:
-					result = True
-				elif __s._value == vother:
-					result = True
-		return result
+	@property
+	def name(__s): return __s._name
+	@name.setter
+	def name(__s,name): __s._name = name
+	
+	# @property
+	# def term(__s): return __s._term
+	
+	# @term.setter
+	# def term(__s,term):
+	# 	with suppress(Exception):
+	# 		__s._term = len(str(__s).strip("'"))
+
+	
+
+
+	
+
+
+
+	
+
+
 
 
 @dataclass(frozen=True)

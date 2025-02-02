@@ -1,43 +1,43 @@
 #!/usr/bin/env python
 import os
 from signal import SIGUSR1
-
+import time
 from pynput import keyboard
-
+from evHID.Types.data import FullKey
 
 
 class KBDev():
 	def __init__(__s,**k):
-		__s.__kwargs__(**k)
 		__s.sig=SIGUSR1
 		__s._listener=keyboard.Listener
 		__s._key=None
+
 		__s._keys_down=[None,]
 		__s._keys_hist=[None,]
+		__s.__kwargs__(**k)
 		__s.__create__()
 
 	def __kwargs__(__s,**k):
 		__s.term=k.get('term')
 		__s.parent=k.get('parent')
-		__s.callback = {
-			'kd' : k.get('kd',lambda*a,**k:None),
-			'ku' : k.get('ku',lambda*a,**k:None),}
-	
-	
-	
 		if __s.parent is not None:
-			__s.callback= __s.parent.callback
 			__s.term=__s.parent.term
-	
+
 	def __keydown__(__s,key):
-		__s.__local_kd__(key)
-		__s.callback['kd'](key)
+		fkey=FullKey(key)
+		__s.parent._key=fkey
+		for cb in __s.parent.cbs:
+			if cb.scope == 'global' and cb.event=='kd':
+				cb(fkey)
+		__s.__local_kd__(fkey)
 		__s.__signal__()
 
 		
 	def __keyup__(__s,key):
 		__s.__local_ku__(key)
-		__s.callback['ku'](key)
+
+
+		# __s.callback['ku'](key)
 	
 	def setkd(__s,fn):
 		__s.callback_kd=fn
