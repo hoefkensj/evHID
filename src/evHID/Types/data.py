@@ -84,6 +84,8 @@ class FKey():
 			elif attr_name == "value":
 				if attr is None:
 					attr=ord(getattr(__s._key, "char"))
+				if str(attr).startswith('<'):
+					attr=int(str(attr)[1:-1])
 				attr_name=f'_{attr_name}'
 			elif attr_name=="name":
 				if attr is None or attr=='':
@@ -106,7 +108,7 @@ class FKey():
 	@property
 	def value(__s):    return __s._value
 	@value.setter
-	def value(__s,value):		__s._value = value
+	def value(__s,value):		__s._value = int(str(value).strip('<').strip('>'))
 	
 	@property
 	def char(__s):     return __s._char
@@ -118,26 +120,6 @@ class FKey():
 	@name.setter
 	def name(__s,name): __s._name = name
 	
-	# @property
-	# def term(__s): return __s._term
-	
-	# @term.setter
-	# def term(__s,term):
-	# 	with suppress(Exception):
-	# 		__s._term = len(str(__s).strip("'"))
-
-	
-
-
-	
-
-
-
-	
-
-
-
-
 @dataclass(frozen=True)
 class color:
 	R:   int = field(default=0, metadata={"range": (0, 65535)})

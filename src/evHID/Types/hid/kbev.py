@@ -20,8 +20,12 @@ class KBEV_Posix(Clict):
 		__s._tty = KBTty
 		__s._key=None
 		__s._keys=[None,]
+		__s._history=[None,]
 		__s._chars=[]
 		__s._event=False
+		__s._focus=True
+		__s.noevkeys=['shift', 'alt', 'ctrl', 'caps_lock', 'cmd', 'num_lock', 'shift_r', 'ctrl_r', 'alt_r','cmd_r']
+		__s.callbacks=k.get('cb')
 		__s.dev=__s._dev(parent=__s)
 		__s.tty=__s._tty(__s)
 		__s.handlers=__s.__sigrecv__()
@@ -29,18 +33,21 @@ class KBEV_Posix(Clict):
 
 	def __sigrecv__(__s):
 		def receive_dev(signum, stack):
-
-			if __s.tty.event:
-				key=__s._key
+			key=__s._key
+			focusev=__s.tty.event
+			if not focusev:
+				__s._focus= __s._focus if key.name  in __s.noevkeys else False
+			else :
+				__s._focus=True
+			if __s._focus:
 				__s._chars=__s.tty.read()
 				__s._event=True
+
 		__s.s1=signal(SIGUSR1, receive_dev)
 
 	def __create__(__s):
 		__s.mode(1)
 		__s.dev=__s._dev(parent=__s)
-
-
 		__s.start=__s.dev.start
 		__s.join=__s.dev.join
 		__s.stop=__s.dev.stop
@@ -72,80 +79,5 @@ class KBEV_Posix(Clict):
 
 		
 		
-		
-		
-		
-		
-		# 	fk.name='space'
-		# 	fk.val=20
-		# 	fk.chr=' '
-		# 	fk.key=key
-		# else:
-		# if 'name' in dir(key):
-		# 	fk.name=str(key.name).split('.')[-1]
-		# else:
-		# 	fk.name=repr(key)
-		# if 'char' in dir(key):
-		# 	fk.chr=key.char
-		# else:
-		# 	fk.chr=None
-		#
-		# if 'value' in dir(key):
-		# 	fk.val=key.value
-		# else:
-		# 	if 'char' in dir(key):
-		# 		if key.char is not None:
-		# 			fk.val=ord(key.char)
 
 
-
-	def getCode(__s):
-		code=None
-		if __s.dev._event:
-			key=__s.__getKBKey__()
-			code=key
-			# sys.stdin.read(key.clr)
-			
-			if 'value' in dir(key):
-				if key == keyboard.Key.space:
-					code=ord(str(key.value)[1:-1])
-				else:
-					code=int(str(key.value)[1:-1])
-			elif 'char' in dir(key):
-				code = ord(key.char)
-			else:
-				print(f'\x1b[8;1H\x1b[K{key}')
-				print(f'\x1b[9;1H\x1b[K{dir(key)}')
-
-		return code
-	def __getKBKey__(__s):
-		def getstdin(key):
-			K=keyboard.Key
-			stdin=''
-			if key.key in [K.space,K.enter,K.home,K.end,K.page_down,K.page_up]:
-				print('\x1b[6;140H1special')
-				stdin=__s.tty.read(1)
-			elif 'value' in dir(key):
-				print('\x1b[6;140H3val')
-				stdin=__s.tty.read(3)
-			elif 'char' in dir(key):
-				print('\x1b[6;140H1char')
-
-				stdin = __s.tty.read(1)
-			return stdin
-		
-		def getkbkey():
-			key=__s._key
-			keys=[key,getstdin(key)]
-			
-			return keys
-		keyc=None
-		while not keyc:
-			if __s.dev._len>0:
-				keyc=getkbkey()
-				break
-			sleep(1e-6)
-		return keyc
-
-# __s.callback
-# k.get('key'k.get('chr')k.get('val')

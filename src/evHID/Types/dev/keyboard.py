@@ -1,90 +1,91 @@
 #!/usr/bin/env python
 import os
-from signal import SIGUSR1
 import time
+from signal import SIGUSR1
 from pynput import keyboard
+from evHID.Types.term.posix import Term
 from evHID.Types.data import FullKey
 
 
 class KBDev():
-	def __init__(__s,**k):
-		__s.sig=SIGUSR1
-		__s._listener=keyboard.Listener
-		__s._key=None
+	def __init__(s,**k):
+		s.sig=SIGUSR1
+		s.listen=keyboard.Listener
+		s.parent=None
+		s.term=None
+		s.callbacks=[]
+		s.__kwargs__(**k)
 
-		__s._keys_down=[None,]
-		__s._keys_hist=[None,]
-		__s.__kwargs__(**k)
-		__s.__create__()
 
-	def __kwargs__(__s,**k):
-		__s.term=k.get('term')
-		__s.parent=k.get('parent')
-		if __s.parent is not None:
-			__s.term=__s.parent.term
+		s._key=None
+		s._keys_down=[None,]
+		s._keys_hist=[None,]
+		s.__create__()
 
-	def __keydown__(__s,key):
+
+	def __kwargs__(s,**k):
+		p=k.get('parent')
+		t=k.get('term',Term())
+		s.term=t
+		if p is not None:
+			s.parent=p
+			s.term=p.term
+			s.callbacks=p.callbacks
+
+
+	def __keydown__(s,key):
 		fkey=FullKey(key)
-		__s.parent._key=fkey
-		for cb in __s.parent.cbs:
-			if cb.scope == 'global' and cb.event=='kd':
-				cb(fkey)
-		__s.__local_kd__(fkey)
-		__s.__signal__()
-
-		
-	def __keyup__(__s,key):
-		__s.__local_ku__(key)
+		s.key=fkey
+		for cb in s.callbacks:
+			cb(s.key)
+		s.signal__()
+		s.__buildin_kd__()
 
 
-		# __s.callback['ku'](key)
-	
-	def setkd(__s,fn):
-		__s.callback_kd=fn
-		__s.__create__()
-	def setku(__s,fn):
-		__s.callback_ku=fn
-		__s.__create__()
-
-		
-	
-	def __create__(__s):
-
-		cb={'on_press':__s.__keydown__,
-		'on_release':__s.__keyup__
-		}
-		__s.listener = __s._listener(**cb)
-		__s.start=__s.listener.start
-		__s.join=__s.listener.join
-		__s.stop=__s.listener.stop
-		return __s
-
-	def __enter__(__s):
-		__s.__create__()
-		__s.start()
-		return __s
-
-
-	def __exit__(__s,*a,**k):
-		__s.stop()
-
-	def __local_kd__(__s,key):
-		__s._key=key
-		__s._keys_down=[*set([*__s._keys_down,key])]
-
-	def __local_ku__(__s,key):
-		__s._keys_down=[*set([*__s._keys_down,key])]
-		__s._keys_down.remove(key)
-		__s._keys_hist+=[key]
+	def __keyup__(s,key):
+		fkey=FullKey(key)
+		s.__buildin_ku__(fkey)
 
 
 
+	def __create__(s):
+
+		cb={'on_press':s.__keydown__,
+			'on_release':s.__keyup__
+			}
+		s.listener = s.listen(**cb)
+		s.start=s.listener.start
+		s.join=s.listener.join
+		s.stop=s.listener.stop
+		return s
+
+	def __enter__(s):
+		s.__create__()
+		s.start()
+		return s
 
 
-	def __signal__(__s):
-		os.kill(__s.term.pid, __s.sig)
-		
-	def key(__s):
-		key=__s._key
-		__s._key=None
+	def __exit__(s,*a,**k):
+		s.stop()
+
+	def __buildin_kd__(s):
+		s._keys_down=[*set([*s._keys_down,s.key])]
+
+	def __buildin_ku__(s,key):
+		s._keys_down=[*set([*s._keys_down,key])]
+		s._keys_down.remove(key)
+		s._keys_hist+=[key]
+
+
+	def signal__(s):
+		os.kill(s.term.pid, s.sig)
+	@property
+	def key(s):
+		key=s._key
+		s._key=None
 		return key
+
+	@key.setter
+	def key(s,key):
+		s._key=key
+		s.parent._key=key
