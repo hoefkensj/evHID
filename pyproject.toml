@@ -1,0 +1,14 @@
+[project]
+name = "evhid"
+version = "0.1.0"
+description = "Python non-blocking terminal keyboard/mouse event detection for any presented to stdin"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+pynput = "^1.7.7"
+
+
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
