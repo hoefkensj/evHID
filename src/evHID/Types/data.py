@@ -11,17 +11,20 @@ class Callback():
 		s.scope=None
 		s.vars=None
 		s.key=None
+		if len(a)>0:
+			s.func=a[0]
 		s.__kwargs__(**k)
 	def __kwargs__(s,**k):
 		s.scope=k.get('scope','global')
-		s.event=k.get('event')
+		s.event=k.get('event','all')
 		s.vars=k.get('vars',{})
 		for var in s.vars:
 			setattr(s,var,s.vars[var])
 		fn=k.get('fn')
 		s.func=fn(s)
-	def __call__(s, key):
-		s.key=key
+
+	def __call__(s, event):
+		s.key=event.get('key')
 		s.fn()
 
 	def fn(s):
@@ -120,29 +123,4 @@ class FKey():
 	@name.setter
 	def name(__s,name): __s._name = name
 	
-@dataclass(frozen=True)
-class color:
-	R:   int = field(default=0, metadata={"range": (0, 65535)})
-	G:   int = field(default=0, metadata={"range": (0, 65535)})
-	B:   int = field(default=0, metadata={"range": (0, 65535)})
-	BIT: int = field(default=8, metadata={"set": (4, 8,16,32)})
-	def __post_init__(self):
-		for attr_name in ("R", "G", "B"):
-			value = getattr(self, attr_name)
-			if not isinstance(value, int) :
-				raise ValueError(f"{attr_name.upper()} must be an integer between 0 and 65535. Got {value}.")
-		if not isinstance(getattr(self,"BIT"),int):
-			raise ValueError(f"{attr_name.upper()} must be one of 4,8,16,32. Got {value}.")
-	
-	@property
-	def RGB(self) -> tuple[int, int, int]:
-		return (self.R, self.G, self.B)
 
-
-@dataclass(frozen=True,order=True)
-class xy:
-	x:   int = field(default=1)
-	y:   int = field(default=1)
-	@property
-	def xy(self) -> tuple[int, int]:
-		return (self.x, self.y)

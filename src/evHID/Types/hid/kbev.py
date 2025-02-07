@@ -25,11 +25,15 @@ class KBEV_Posix(Clict):
 		__s._event=False
 		__s._focus=True
 		__s.noevkeys=['shift', 'alt', 'ctrl', 'caps_lock', 'cmd', 'num_lock', 'shift_r', 'ctrl_r', 'alt_r','cmd_r']
-		__s.callbacks=k.get('cb')
+		__s.callbacks=k.get('cb',[])
+		__s.cb={'glob':{'kd':[],'ku':[]}}
 		__s.dev=__s._dev(parent=__s)
 		__s.tty=__s._tty(__s)
 		__s.handlers=__s.__sigrecv__()
+		for cb in __s.callbacks:
+			__s.addcallback(cb)
 		__s.__create__()
+
 
 	def __sigrecv__(__s):
 		def receive_dev(signum, stack):
@@ -76,8 +80,12 @@ class KBEV_Posix(Clict):
 		__s._event=False
 		return ev
 
+	def addcallback(s,cb):
+		if cb.scope=='global':
+			if 'kd' in cb.event:
+				s.cb['glob']['kd']+=[cb]
+			if 'ku' in cb.event:
+				s.cb['glob']['ku']+=[cb]
 
-		
-		
 
 

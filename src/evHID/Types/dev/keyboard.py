@@ -13,7 +13,8 @@ class KBDev():
 		s.listen=keyboard.Listener
 		s.parent=None
 		s.term=None
-		s.callbacks=[]
+		s.cb={'kd':[],'ku':[]}
+		s.history=[]
 		s.__kwargs__(**k)
 
 
@@ -30,14 +31,18 @@ class KBDev():
 		if p is not None:
 			s.parent=p
 			s.term=p.term
-			s.callbacks=p.callbacks
+			for cb in p.cb['glob']['kd']:
+				s.cb['kd']+=[cb]
+			for cb in p.cb['glob']['ku']:
+				s.cb['ku']+=[cb]
 
 
 	def __keydown__(s,key):
 		fkey=FullKey(key)
 		s.key=fkey
-		for cb in s.callbacks:
-			cb(s.key)
+		ev={'event': 'dn','key':fkey}
+		for cb in s.cb['kd']:
+			cb(ev)
 		s.signal__()
 		s.__buildin_kd__()
 
@@ -79,6 +84,12 @@ class KBDev():
 
 	def signal__(s):
 		os.kill(s.term.pid, s.sig)
+
+	def addcallback(s,cb):
+		if cb.event == 'kd':
+			s.cb['kd']+=[cb]
+		if cb.event == 'ku':
+			s.cb['ku']+=[cb]
 	@property
 	def key(s):
 		key=s._key

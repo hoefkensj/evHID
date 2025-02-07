@@ -1,17 +1,22 @@
 #!/usr/bin/env python
 from evHID import KBEV
-from pynput import keyboard
 from signal import pause
+from evHID import Callback
 import sys
 EXIT=0
-def cbexit(key):
-	global EXIT
-	if key.char == 'q':
-		print('q')
-		EXIT=1
+def cbExit(key):
+	def cbexit(key):
+		global EXIT
+		if key.char == 'q':
+			print('q')
+			EXIT=1
+	return cbexit
 
+cb=Callback(fn=cbExit)
+cb.event='kd'
+cb.scope='global'
 
-with KBEV(kd=cbexit) as kb:
+with KBEV(cb=[cb]) as kb:
 	i=0
 	while not EXIT:
 		if kb.event():
