@@ -8,18 +8,26 @@ import sys
 from time import time_ns
 from shutil import get_terminal_size
 from dataclasses import dataclass, field
+from enum import Enum
 from Clict import Clict
 
+@dataclass()
+class Coord:
+	col: int = field(default=1)
+	row: int = field(default=1)
 
-
-@dataclass(frozen=True, order=True)
-class xy:
-	x: int = field(default=1)
-	y: int = field(default=1)
-
+	def __str__(__s):
+		return f'\x1b[{__s.y};{__s.x}H'
 	@property
-	def xy(self) -> tuple[int, int]:
-		return (self.x, self.y)
+	def xy(__s) -> tuple[int, int]:
+		return (__s.x, __s.y)
+	@property
+	def y(__s):
+		return __s.row
+	@property
+	def x(__s):
+		return __s.col
+
 @dataclass(frozen=True)
 class color:
 	R: int = field(default=0, metadata={"range": (0, 65535)})
@@ -39,23 +47,37 @@ class color:
 	def RGB(self) -> tuple[int, int, int]:
 		return (self.R, self.G, self.B)
 
+@dataclass()
+class ANSI_Cursor(str, Enum):
+	esc = '\x1b'
+	q = '6n'
+	save = 's'
+	load = 'u'
+	show = '?25h'
+	hide = '?25l'
 
-class Cursor(Clict):
+	def __str__(self):
+		return '{ESC}[{CODE}'.format(ESC=self.ESC,CODE=self.value)
+	def __repr__(self):
+		return repr(self.value)
+
+
+class Cursor():
 	def __init__(__s, term):
 		super().__init__()
 		__s.term = term
-		__s.ansi.esc = '\x1b'
-		__s.ansi.q = '[6n'
-		__s.ansi.save = '[s'
-		__s.ansi.load = '[u'
-		__s.ansi.show = '[?25h'
-		__s.ansi.hide = '[?25l'
+		__s.ansi = ANSI_Cursor
 
 		__s.re = re.compile(r"^.?\x1b\[(?P<Y>\d*);(?P<X>\d*)R", re.VERBOSE)
 		__s.position = __s.__update__
-		__s.xy = lambda: __s.__update__()
+		__s._xy=Coord(1,1)
+		__s.XY=Coord(1,1)
 		__s.history = [*(None,) * 64]
 		__s.init = __s.__update__()
+	@property
+	def xy(__s):
+		__s._xy=__s.__update__()
+		return __s._xy
 
 	def __update__(__s, get='XY'):
 		def Parser():
@@ -66,7 +88,7 @@ class Cursor(Clict):
 			# from stdin? As dirty work around, getpos() returns if this fails: None
 			try:
 				groups = __s.re.search(buf).groupdict()
-				result = {'X': int(groups['X']), 'Y': int(groups['Y'])}
+				result = Coord(int(groups['X']), int(groups['Y']))
 			except AttributeError:
 				result = None
 			return result
@@ -77,12 +99,9 @@ class Cursor(Clict):
 		timeout.start = time_ns() // 1e6
 		timeout.running = 0
 		while not result:
-			result = __s.term.ansi(''.join([__s.ansi.esc, __s.ansi.q]), Parser)
-		__s.X = result['X']
-		__s.Y = result['Y']
-		__s.XY = tuple(result.values())
-		__s.history = [__s.history[1:], __s.XY]
-		return __s.get(get)
+			result = __s.term.ansi(''.join([__s.ansi.esc,'[', __s.ansi.q]), Parser)
+		__s.XY =result
+		return result
 
 	def show(__s, state=True):
 		if state:
@@ -99,23 +118,20 @@ class Cursor(Clict):
 
 	@property
 	def x(__s):
-		__s.__update__('X')
+		__s.X=__s.__update__('X')
 		return __s.X
 
 	@property
 	def y(__s):
-		__s.__update__('Y')
+		__s.Y=__s.__update__('Y')
 		return __s.Y
 
 
 class vCursor(Cursor):
-	def __init__(__s, term, x=1, y=1):
-		super().__init__()
+	def __init__(__s, term,cursor):
 		__s.term = term
-		__s.position = __s.__update__
-		__s.x = lambda: __s.__update__('X')
-		__s.y = lambda: __s.__update__('Y')
-		__s.xy = lambda: __s.__update__()
+		__s.realcursor=cursor
+		__s.position = Coord(__s.realcursor.x,__s.realcursor.y)
 		__s.history = [*(None,) * 64]
 		__s.controled = False
 		__s.bound = True
@@ -153,8 +169,8 @@ class Size():
 		__s.getsize = get_terminal_size
 		__s.time = None
 		__s.last = None
-		__s.xy = xy(1, 1)
-		__s._tmp = xy(1, 1)
+		__s.xy = Coord(1, 1)
+		__s._tmp = Coord(1, 1)
 		__s.rows = 1
 		__s.cols = 1
 		__s.history = []
@@ -174,7 +190,7 @@ class Size():
 	def __update__(__s):
 		if __s.time is None:
 			__s.last = time_ns()
-		size = xy(*__s.getsize())
+		size = Coord(*__s.getsize())
 		if size != __s.xy:
 			if size != __s._tmp:
 				__s.changing = True
@@ -216,7 +232,7 @@ class Colors():
 			rgb = [int(i, base=16) for i in rgb]
 			rgb = color(*rgb, 16)
 		except Exception as E:
-			print(E)
+			# print(E)
 			rgb = None
 		return rgb
 
@@ -248,11 +264,12 @@ class Term():
 		
 		__s.live      = __s.tcgetattr(__s.fd)
 		__s.save      = __s.tcgetattr(__s.fd)
-		
+
 		__s._mode     = 0
 		__s.mode      = __s.__mode__
 		atexit.register(__s.mode,'normal')
 		__s.cursor    = Cursor(__s)
+		__s.vcursors  = {0:vCursor(__s,__s.cursor)}
 		__s.size      = Size(parent=__s)
 		__s.color     = Colors(parent=__s)
 
@@ -270,14 +287,14 @@ class Term():
 		__s.update()
 	def __mode__(__s,mode=None):
 		def Normal():
-			__s.cursor.show(True)
+			# __s.cursor.show(True)
 			__s.echo(True)
 			__s.canonical(True)
 			__s.tcsetattr(__s.fd, __s.TCSAFLUSH, __s.save)
 			__s._mode = nmodi.get('normal')
 
 		def Ctl():
-			__s.cursor.show(False)
+			# __s.cursor.show(False)
 			__s.echo(False)
 			__s.canonical(False)
 			__s._mode = nmodi.get('ctl')

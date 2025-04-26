@@ -2,20 +2,20 @@
 import sys
 from select import select
 
-from Clict import Clict
 
 
-class KBTty(Clict):
+class KBTty():
 	def __init__(__s,parent=None,term=None):
 		super().__init__()
 		__s.term=parent.term or term
 		__s._buffer=[]
-		__s._event=False
+		__s._event=True
 		__s._count=0
 
 	@property
-	def event(__s):
-		return select([__s.term.fd], [], [], 0)[0]!=[]
+	def event(s):
+		s._event=select([s.term.fd], [], [], 0)[0]!=[]
+		return s._event
 		# print(__s._count)
 		# print(('====='*int(__s._event))+('+++++'*(not __s._event)))
 
@@ -33,9 +33,9 @@ class KBTty(Clict):
 			ret=''.join( __s._buffer)
 			__s._buffer=[]
 			__s._count+=1
-		print('\x1b[2;1H\x1b[3{}m{}\x1b[m'.format(int(bin(__s._count)[-1])+1,__s._count))
 		return ret
-
+	def counted(s):
+		return '\x1b[2;1H\x1b[3{}m{}\x1b[m'.format(int(bin(s._count)[-1])+1,s._count)
 	def getch(__s):
 		if len(__s.buffer)!=0:
 			c=__s.buffer[-1]
