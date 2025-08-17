@@ -247,7 +247,7 @@ class Colors():
 
 class Term():
 	def __init__(__s,*a,**k):
-		super().__init__()
+		# super().__init__()
 		__s.pid       = os.getpid()
 		__s.ppid      = os.getpid()
 		
