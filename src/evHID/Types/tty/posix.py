@@ -7,7 +7,7 @@ from select import select
 class KBTty():
 	def __init__(__s,parent=None,term=None):
 		super().__init__()
-		__s.term=parent.term or term
+		__s.term=parent.term if parent else term
 		__s._buffer=[]
 		__s._event=True
 		__s._count=0
