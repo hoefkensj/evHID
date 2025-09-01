@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from unittest import TestCase
-from evHID.Types.term.terminal import Term
+from evHID.term import Term
 
 
 class Test(TestCase):

@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 import sys
 from select import select
-
+from signal import SIGUSR1
+import os
 
 
 class KBTty():
 	def __init__(__s,parent=None,term=None):
-		super().__init__()
+		# super().__init__()
+		__s.parent=parent
 		__s.term=parent.term if parent else term
 		__s._buffer=[]
 		__s._event=True

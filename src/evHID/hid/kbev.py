@@ -1,13 +1,9 @@
 #!/usr/bin/env python
-from signal import signal, SIGUSR1,SIGALRM
-from time import sleep
-import sys
-from pynput import keyboard
-import time
-from evHID.Types.controls.callback import Callback
-from evHID.Types.dev.keyboard import KBDev
-from evHID.Types.term.posix import Term
-from evHID.Types.tty import KBTty
+from signal import signal, SIGUSR1
+from evHID.Types.callback import Callback
+from evHID.term.posix import Term
+from evHID.tty.posix import KBTty
+from evHID.dev.keyboard import KBDev
 
 
 def Prt(s):

@@ -1,5 +1,5 @@
 # /usr/bin/env pyhthon
-from evHID.Types.tty.posix import KBTty
+from evHID.tty import KBTty
 
 
 

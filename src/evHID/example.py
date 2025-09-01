@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 
-from evHID import KBEV
-from evHID import Callback as Cb
-from evHID.Types.data import Callback
+from evHID.hid.kbev import KBEV_Posix as KBEV
+from evHID.Types.callback import Callback as Cb
 from signal import pause
 from time import sleep
 
@@ -60,7 +59,7 @@ def async_callbackfunction(s,tc=1):
 if __name__ == '__main__':
 	coll = '\x1b[{};59H\x1b[1K\x1b[G\x1b[1;3{}m{} {}  \x1b[20G{}\x1b[40G0x{}\x1b[m'
 
-	cb = Callback()
+	cb = Cb()
 	cb.key='end'
 	cb.event=[Cb.Event.DOWN,Cb.Event.UP]
 	cb.function=async_callbackfunction
@@ -95,6 +94,5 @@ if __name__ == '__main__':
 					window.pop(0)
 				for i,line in enumerate(window):
 					print(coll.format(i+6,*line))
-			pause()
-
+			sleep(0.5pro)
 

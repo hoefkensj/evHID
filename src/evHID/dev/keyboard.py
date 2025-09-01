@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 import os
-import time
 from signal import SIGUSR1
 from pynput import keyboard
-from evHID.Types.term.posix import Term
-
+from evHID.Types.kb_key import make_Key,KbEvent
+from evHID.Types.kb_key import KbEvent as Event
 
 class KBDev():
 	def __init__(s,**k):
@@ -22,8 +21,7 @@ class KBDev():
 
 	def __keydown__(s):
 		def kdn(key):
-			fkey=PrepKey(key,Event.DOWN)
-			print(fkey)
+			fkey=make_Key(key)
 		return kdn
 		# s.parent.setkey(fkey)
 		# s.signal__()
@@ -31,7 +29,7 @@ class KBDev():
 
 	def __keyup__(s):
 		def kup(key):
-			fkey=PrepKey(key,Event.UP)
+			fkey=make_Key(key)
 		return kup
 
 

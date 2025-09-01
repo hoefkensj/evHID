@@ -1,61 +1,8 @@
 #!/usr/bin/env python
 from dataclasses import dataclass, field
-from os import supports_effective_ids
 
 from pynput import keyboard
 from contextlib import suppress
-from typing import Literal
-from enum import Enum
-import time
-class Callback():
-	class Scope(Enum):
-		GLOBAL = "global"
-		APPLICATION = "application"
-		LOCAL = "local"
-	class Event(Enum):
-		INIT = 'init'
-		DOWN = 'down'
-		UP   = 'up'
-
-	scope: Literal["global", "application", "local"]  #
-	event: Literal['down','up']
-	match: keyboard.Key
-	results:list
-	_uservars: dict
-	_userfn: callable
-	_callfn: callable
-	def __init__(s,*a,**k):
-		s.scope : list[Callback.Scope]= [Callback.Scope.LOCAL,]
-		s.event : list[Callback.Event] = [Callback.Event.DOWN,]
-		s.match : keyboard.key = k.get('key')
-		s.results=[]
-		s._uservars=dict=k.get('vars',k.get('uservars',{}))
-		s._userfn=callable = k.get('function',k.get('fn'))
-		s.armed=callable =  None
-		if len(s._uservars) > 0:
-			s.uservars(s._uservars)
-		s.__arm__()
-
-
-	@property
-	def function(__s):
-		return __s._userfn
-	@function.setter
-	def function(__s,function):
-		__s._userfn = function
-		__s.__arm__()
-
-	def __call__(s, *a,**k):
-		s.results+=[s.armed(*a,**k)]
-
-	def __arm__(s):
-		s.armed=s._userfn(s)
-
-	def uservars(s,**vars):
-		for var in vars:
-			setattr(s, var, vars.get(var))
-		s.__arm__()
-		return s._uservars
 
 
 @dataclass(frozen=True)
@@ -149,3 +96,18 @@ class FKey():
 	def name(__s,name): __s._name = name
 
 
+class Event():
+	__module__=None
+	__qualname__='Event'
+	def __new__(cls,name):
+		cls.__name__=name
+		return super().__new__(cls,name)
+	def __init__(s,name):
+		s.name=name
+	@classmethod
+	def __Down__(cls):
+		return cls('Down')
+	@property
+	def Down(s):
+		return Event('Down')
+D=Event.Down
